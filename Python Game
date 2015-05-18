@@ -1,0 +1,271 @@
+# Programmed By: Matthew McLeod  
+  
+import math  
+  
+def size_check():  
+    ''' 
+(None -> None) 
+    Return a board size that fits the constraints of the game 
+    '''  
+    # a will always be true. This is an indefinite while loop until the user enters a valid board dimension  
+    a = True  
+    while a == True:  
+        # Takes in a board dimension  
+        board_size = int(input("Please enter a valid size of the board: "))  
+        # Determines if the square root board_size entered is a whole number  
+        if board_size**(0.5)%1 == 0:  
+            # Ensures the board_size falls within the parameters  
+            if board_size >=4 & board_size <=16:  
+                return board_size  
+        else:  
+            print("That is not a valid board dimension.")  
+  
+def mat_nice_screen(matrix):  
+    ''' 
+(matrix -> string) 
+ 
+    Return string from the matrix in format of the wanted grid layout 
+    '''  
+  
+    # Count is used to determine where '|' are placed in the string  
+    count = 0  
+    #bottom_count is used to determine where to put the ----- break in grid  
+    bottom_count = -1  
+    # Variables to aid in the function  
+    new_line = ""  
+    add = ''  
+    final_string = ''  
+    # Additional ticks to make the board line up  
+    if board_size == 9:  
+        add = '-'  
+    if board_size == 16:  
+        add = '--'  
+    # Goes through each list within the larger list  
+    #Performs the actions on each list and adds it to final_string  
+    for line in matrix:  
+        #Converting list to properly formatted string  
+        line = str(line).strip('[]')  
+        line = line.strip(',')  
+        line = line.replace(',','')  
+        line = line.replace(' ','')  
+          
+        bottom_count += 1  
+        #Adds the bottom lines  
+        if bottom_count == int(board_size**0.5):  
+            final_string +=(("-" * 2 * int(board_size**0.5) + '-') * int(board_size**0.5)+add) + '\n'  
+            bottom_count = 0  
+        # Goes though the string line and adds the appropriate additional characters  
+        #This new_line string is added to the final_string  
+        for letter in line:  
+            count += 1  
+            # Adding a space at the beginning to make matrix look niced  
+            if count == 1:  
+                new_line += " "  
+            new_line += letter + " "  
+            # Fullfilled when it is proper to put a '|'  
+            if count == int(board_size**0.5):  
+                new_line += "|"  
+                # Reset counter  
+                count = 0  
+        new_line = new_line.rstrip("|")  
+  
+                  
+        final_string += (new_line.strip("|")) + '\n'  
+        new_line =""  
+  
+    return final_string  
+  
+  
+def check_move(row_move,column_move,actual_move):  
+    ''' 
+(int,int,int -> boolean) 
+    Return true if the move is legal. Otherwise, false 
+     
+    '''  
+    # Finds the realtice quadrant that the row and column are a part of  
+    relative_row = math.floor(row_move/(board_size**0.5))  
+    relative_column = math.floor(column_move/(board_size**0.5))  
+    # Searches the quadrant to see if there is already a number present of that alue  
+    for i in range (relative_row*int(board_size**0.5),(relative_row+1)*int(board_size**0.5)):  
+        for j in range (relative_column*int(board_size**0.5),(relative_column+1)*int(board_size**0.5)):  
+            # Executes only when actual move is equal to that  
+            if matrix[i][j] ==  actual_move:  
+                return False  
+              
+    # Runs through the board  
+    for i in range (board_size):  
+        # Checks if in the column a number matches actual move  
+        if matrix[i][column_move] == actual_move:  
+            return False  
+        # Checks if in the row a number matches actual move  
+        if matrix[row_move][i] == actual_move:  
+            return False  
+    # Checks if the entry already has a number.  
+    # If so, then not allowed  
+    if matrix[row_move][column_move]!= 0:  
+        return False  
+                  
+    return True  
+  
+def check_win():  
+    ''' 
+(None -> Boolean) 
+    Return 0 if there still is possible moves, return 1 if there is a winner, return 2 if there is a tie 
+    '''  
+    moves_remaining = False  
+    number_zeroes = 0  
+    # Runs through the board  
+    for i in range(board_size):  
+        for j in range(board_size):  
+            # Checks if there are any numbers equal to 0 on the board  
+            if matrix[i][j] == 0:  
+                number_zeroes +=1  
+                # For loop that goes through all possible numbers for the spots equal to 0 to see if there any possible moves  
+                for k in range (board_size):  
+                    moves_remaining = check_move(i,j,k+1)  
+                    #  moves remaining = True, then there is a possible move  
+                    if moves_remaining == True:  
+                        return 0  
+    # This means entire grid is filled  
+    if number_zeroes == 0:  
+        return 2  
+    #If no conditions are met, this means that there are no possible moves and game over  
+    return 1  
+      
+  
+def save():  
+    ''' 
+(None -> None) 
+    Writes the game to a text file 
+    '''  
+    # Opens up the reader   
+    text_file = input("Please enter the file name: ")  
+    file_write = open(text_file + '.txt','w')  
+    # Uses the converting function to write out to the file in proper format  
+    file_write.write(mat_nice_screen(matrix))     
+    file_write.close()  
+      
+  
+def play():  
+    ''' 
+(None -> None) 
+    Main function in which the game is played 
+    '''  
+    # Makes these variables global  
+    global board_size  
+    board_size = size_check()  
+    global matrix  
+    matrix = []  
+    global new_line  
+    new_line= ""  
+    global row_move  
+    row_move = 0  
+    global column_move  
+    column_move = 0  
+    global actual_move  
+    actual_move = 0  
+      
+    # Counter used to determine who's turn it is  
+    player_counter = 0  
+    # Matrix of the game  
+    matrix = []  
+    # Initializes the first matrix filled with 0s  
+    for i in range (int(board_size)):  
+        matrix.append([])  
+        for j in range (int(board_size)):  
+            matrix[i].append(0)  
+              
+         
+    x = True  
+    # Ensures the game keeps running until there is an end  
+    while x == True:  
+  
+        # Makes player_counter to be possible for it to be accessed anywhere  
+        global player_counter  
+  
+        # Variables used in processing the moves  
+        all_move = ''  
+        row_move = ''  
+        column_move =''  
+        actual_move =''  
+        # Prints out the screen in the proper format  
+        print(mat_nice_screen(matrix))  
+  
+        # A constant while loop that will only finish if asking becomes True  
+        # This can only be accomplished if the player enters a valid move  
+        asking = False  
+        while asking == False:  
+  
+            row_move = ''  
+            column_move =''  
+            actual_move =''  
+            # Variable used to determine who's turn it is  
+            player_counter +=1  
+  
+            print('\n')  
+             
+            # If and Else used to make ask Player A or B for their move  
+            if player_counter == 1:  
+                all_move = input("Player A, please enter your move: ")  
+            else:  
+                all_move = input("Player B, please enter your move: ")  
+                player_counter = 0  
+            # Quits game if q is entered  
+            if all_move == 'q':  
+                return ''  
+            #Saves game if s is pressed at any time  
+            if all_move == 's':  
+                player_counter -= 1             
+                save()  
+                continue  
+            # Runs when a value has been entered by player A or B  
+            if all_move != 's':  
+  
+                #Gets rid of spaces in the string  
+                all_move = all_move.replace(' ','')        
+  
+                item_counter = 0  
+                row_move = 0  
+                column_move = 0  
+                actual_move = 0  
+                  
+                # Assigns the three numbers to the variables respectively  
+                row_move,column_move,actual_move = all_move.split(",")  
+  
+                row_move = int(row_move)  
+                column_move = int(column_move)  
+                actual_move = int(actual_move)  
+              
+            # Checks to see if the move is legal  
+            asking = check_move(row_move,column_move,actual_move)  
+  
+            # Tells the player they have entered an incorrect move  
+            if asking == False:      
+                print ("Error: You have entered an incorrect move")  
+                player_counter -= 1  
+  
+            # If move is valid, the matrix is updated  
+            if asking == True:  
+                global matrix  
+                matrix[row_move][column_move] = actual_move  
+  
+            # Checks to see if there is a win  
+            Won_Yet = check_win()  
+  
+            # If there is a win, using player_count, determine who won and prints it out and then quits  
+            if Won_Yet == 1:  
+                if player_counter == 1:  
+                    (print("Player A won the game"))  
+                    save()  
+                    return   
+                else:  
+                    (print("Player B won the game"))  
+                    save()  
+                    return  
+            # If there is a tie, prints out that there is a tie  
+            if Won_Yet == 2:  
+                print("It is a Tie")  
+                print("Now save")  
+                save()  
+                  
+                return   
